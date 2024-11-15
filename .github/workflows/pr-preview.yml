@@ -37,9 +37,19 @@ jobs:
 
       - name: Install dependencies and build
         if: github.event.action != 'closed'
+        env:
+          GITHUB_EVENT_NUMBER: ${{ github.event.number }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           yarn install --frozen-lockfile
-          yarn build
+          # Extract just the repo name from 'owner/repo' using shell expansion
+          REPO_NAME="${GITHUB_REPOSITORY##*/}"
+          PR_NUMBER="${GITHUB_EVENT_NUMBER}"
+
+          # Construct the base path for deployment
+          export VITE_ROUTER_BASE="/$REPO_NAME/pr-preview/pr-$PR_NUMBER/"
+          echo "Base path set to $REACT_APP_BASE_PATH"
+          yarn build --base="$VITE_ROUTER_BASE"
 
       - name: Deploy preview
         uses: rossjrw/pr-preview-action@v1
