@@ -48,8 +48,11 @@ jobs:
 
           # Construct the base path for deployment
           export VITE_ROUTER_BASE="/$REPO_NAME/pr-preview/pr-$PR_NUMBER/"
-          echo "Base path set to $REACT_APP_BASE_PATH"
+          echo "Base path set to VITE_ROUTER_BASE"
           yarn build --base="$VITE_ROUTER_BASE"
+
+          # Handle page refreshes
+          cp dist/index.html dist/404.html
 
       - name: Deploy preview
         uses: rossjrw/pr-preview-action@v1
