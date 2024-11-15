@@ -1,0 +1,50 @@
+name: Preview PR
+concurrency: preview-${{ github.ref }}
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+
+env:
+  NODE_VERSION: 20.11.0
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+
+
+      - name: Remove .yarnrc file to avoid conflicts
+        run: rm -rf .yarnrc
+
+
+      - name: Prepare and activate Yarn version 1.22.22
+        run: corepack prepare yarn@1.22.22 --activate
+
+      - name: Verify Yarn version
+        run: yarn --version
+
+      - name: Install dependencies and build
+        if: github.event.action != 'closed'
+        run: |
+          yarn install --frozen-lockfile
+          yarn build
+
+      - name: Deploy preview
+        uses: rossjrw/pr-preview-action@v1
+        with:
+          source-dir: dist
+          preview-branch: gh-pages
+          umbrella-dir: pr-preview
+          action: auto
